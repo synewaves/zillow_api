@@ -28,8 +28,8 @@ Soon.
 
 You'll need [PHPUnit 3.4+](http://www.phpunit.de/) installed to run the test suite.
 
-* Open `tests/phpunit.xml.dis`t and modify as needed.
+* Open `test/phpunit.xml.dis`t and modify as needed.
 * Rename to `phpunit.xml`
-* Run `phpunit` from within `/tests` directory.
+* Run `phpunit` from within `/test` directory.
 
 Copyright (c) 2010 Matthew Vince, released under the MIT license
