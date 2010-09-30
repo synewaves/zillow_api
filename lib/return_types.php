@@ -296,6 +296,7 @@ class ZillowDemographics extends ZillowData
             'neighborhood' => isset($doc->response->region->neighborhood) ? (string) $doc->response->region->neighborhood : null,
             'latitude' => isset($doc->response->region->latitude) ? (string) $doc->response->region->latitude : null,
             'longitude' => isset($doc->response->region->longitude) ? (string) $doc->response->region->longitude : null,
+            'zmmrateurl' => isset($doc->response->region->zmmrateurl) ? (string) $doc->response->region->zmmrateurl : null,
          );
       }
    }
@@ -338,7 +339,7 @@ class ZillowDemographics extends ZillowData
             $this->parseXmlCensusMetric(substr($element->name, 15), $attribute);
          }
       } elseif ($element->name == 'BuiltYear') {
-         // // year build spans
+         // year built spans
          foreach ($element->data->attribute as $attribute) {
             $this->parseXmlBuiltYears($attribute);
          }
@@ -348,7 +349,9 @@ class ZillowDemographics extends ZillowData
          $this->metrics[$key] = array();
          foreach ($element->data->attribute as $attribute) {
             list($akey, $value) = $this->parseXmlMetric($attribute);
-            $this->metrics[$key][$akey] = $value; 
+            if (!is_null($value)) {
+               $this->metrics[$key][$akey] = $value; 
+            }
          }
       }
    }
@@ -363,6 +366,8 @@ class ZillowDemographics extends ZillowData
       if (trim($name) != '') {
          return array($name, $this->getMetricValues($element));
       }
+      
+      return array(null, null);
    }
    
    /**
@@ -418,6 +423,7 @@ class ZillowDemographics extends ZillowData
       // check for single vs multiple values
       if (isset($element->values)) {
          return array(
+            'neighborhood' => isset($element->values->neighborhood->value) ? (string) $element->values->neighborhood->value : null,
             'city' => isset($element->values->city->value) ? (string) $element->values->city->value : null,
             'nation' => isset($element->values->nation->value) ? (string) $element->values->nation->value : null,
             'zip' => isset($element->values->zip->value) ? (string) $element->values->zip->value : null,
@@ -435,10 +441,16 @@ class ZillowDemographics extends ZillowData
 class ZillowRegionChart extends ZillowData
 {
    /**
-    * Chart URL
+    * Chart image URL
     * @var string
     */
    public $url;
+   
+   /**
+    * Chart information URL
+    * @var string
+    */
+   public $link;
    
    /**
     * ZIndex value
@@ -462,6 +474,7 @@ class ZillowRegionChart extends ZillowData
       }
       
       $this->url = isset($doc->response->url) ? (string) $doc->response->url : null;
+      $this->link = isset($doc->response->link) ? (string) $doc->response->link : null;
       $this->zindex = isset($doc->response->zindex) ? (float) $doc->response->zindex : null;
    }
 }
@@ -483,6 +496,12 @@ class ZillowRegion
     * @var string
     */
    public $name = null;
+   
+   /**
+    * Information URL
+    * @var string
+    */
+   public $url = null;
    
    /**
     * Zillow index value (in USD)
@@ -566,6 +585,7 @@ class ZillowRegionChildren extends ZillowData
       $region = new ZillowRegion();
       $region->id = isset($region_xml->id) ? (string) $region_xml->id : null;
       $region->name = isset($region_xml->name) ? (string) $region_xml->name : null;
+      $region->url = isset($region_xml->url) ? (string) $region_xml->url : null;
       $region->zindex = isset($region_xml->zindex) ? (string) $region_xml->zindex : null;
       $region->latitude = isset($region_xml->latitude) ? (string) $region_xml->latitude : null;
       $region->longitude = isset($region_xml->longitude) ? (string) $region_xml->longitude : null;
@@ -670,6 +690,12 @@ class ZillowMonthlyPayments extends ZillowData
     * @var float
     */
    public $insurance = null;
+   
+   /**
+    * Calculated downpayment
+    * @var float
+    */
+   public $down_payment = null;
 
 
    /**
@@ -694,7 +720,7 @@ class ZillowMonthlyPayments extends ZillowData
          $rc->pandi = (string) $payment->monthlyPrincipalAndInterest;
          $rc->pmi = (string) $payment->monthlyMortgageInsurance;
          
-         $this->payments[] = $rc;
+         $this->payments[$rc->type] = $rc;
       }
       
       // get extras
@@ -703,6 +729,9 @@ class ZillowMonthlyPayments extends ZillowData
       }
       if (isset($doc->response->monthlyHazardInsurance)) {
          $this->insurance = (float) $doc->response->monthlyHazardInsurance;
+      }
+      if (isset($doc->response->downPayment)) {
+         $this->down_payment = (float) $doc->response->downPayment;
       }
    }
 }

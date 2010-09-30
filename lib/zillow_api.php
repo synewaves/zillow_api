@@ -17,49 +17,49 @@ class ZillowApi
     * Request timeout
     * @var integer
     */
-   public static $request_timeout = 2;
+   public $request_timeout = 2;
    
    /**
     * Proxy address (if needed)
     * @var string
     */
-   public static $proxy_address = null;
+   public $proxy_address = null;
    
    /**
     * Proxy port (if needed)
     * @var integer
     */
-   public static $proxy_port = null;
+   public $proxy_port = null;
    
    /**
     * Proxy username (if needed)
     * @var string
     */
-   public static $proxy_user = null;
+   public $proxy_user = null;
    
    /**
     * Proxy password (if needed)
     * @var string
     */
-   public static $proxy_pass = null;
+   public $proxy_pass = null;
    
    /**
     * Max number of socket reads
     * @var integer
     */
-   public static $read_retries = 3;
-   
-   /**
-    * API base URL
-    * @var string
-    */
-   public static $url = 'http://www.zillow.com/webservice/';
+   public $read_retries = 3;
    
    /**
     * API key
     * @var string
     */
-   public static $key = '';
+   public $key = '';
+   
+   /**
+    * API base URL
+    * @var string
+    */
+   protected static $url = 'http://www.zillow.com/webservice/';
    
    
    // calls to implement:
@@ -70,7 +70,16 @@ class ZillowApi
    // * GetDeepSearchResults API
    // * GetDeepComps API
    // * GetUpdatedPropertyDetails API
-
+   
+   
+   /**
+    * Constructor
+    * @param string $key API key
+    */
+   public function __construct($key)
+   {
+      $this->key = $key;
+   }
 
    /**
     * Gets data from the GetSearchResults API
@@ -78,7 +87,7 @@ class ZillowApi
     * Options available:
     *
     * <ul>
-    *   <li><b>zws-id</b> <i>(string)</i>: Zillow API key (default: self::$key)</li>
+    *   <li><b>zws-id</b> <i>(string)</i>: Zillow API key (default: $this->key)</li>
     *   <li><b>address</b> <i>(string)</i>: Address (default: null)</li>
     *   <li><b>citystatezip</b> <i>(string)</i>: City, state and zipcode (default: null)</li>
     * </ul>
@@ -87,22 +96,21 @@ class ZillowApi
     * @param boolean $rax_xml return the raw XML response
     * @return ZillowSearchResults results data
     */
-   public static function getSearchResults($options = array(), $raw_xml = false)
+   public function getSearchResults($options = array(), $raw_xml = false)
    {
       $default_options = array(
-         'zws-id' => self::$key,
+         'zws-id' => $this->key,
          'address' => null,
          'citystatezip' => null,
       );
       $options = array_merge($default_options, $options);
       
       // check requirements
-      if ((is_null($options['citystatezip'])) || (is_null($options['address']))
-      ) {
-         throw new Exception('You must provide an address and citystatezip to getSearchResults');
+      if (is_null($options['citystatezip']) || is_null($options['address'])) {
+         throw new InvalidArgumentException('You must provide an address and citystatezip to getSearchResults');
       }
       
-      return self::sendRequest('ZillowSearchResults', 'GetSearchResults', $options, $raw_xml);
+      return $this->sendRequest('ZillowSearchResults', 'GetSearchResults', $options, $raw_xml);
    }
    
    /**
@@ -111,7 +119,7 @@ class ZillowApi
     * Options available:
     *
     * <ul>
-    *   <li><b>zws-id</b> <i>(string)</i>: Zillow API key (default: self::$key)</li>
+    *   <li><b>zws-id</b> <i>(string)</i>: Zillow API key (default: $this->key)</li>
     *   <li><b>regionid</b> <i>(integer)</i>: Zillow region ID (default: null)</li>
     *   <li><b>state</b> <i>(string)</i>: State (default: null)</li>
     *   <li><b>city</b> <i>(string)</i>: City (default: null)</li>
@@ -123,10 +131,10 @@ class ZillowApi
     * @param boolean $rax_xml return the raw XML response
     * @return ZillowDemographics demographics data
     */
-   public static function getDemographics($options = array(), $raw_xml = false)
+   public function getDemographics($options = array(), $raw_xml = false)
    {
       $default_options = array(
-         'zws-id' => self::$key,
+         'zws-id' => $this->key,
          'regionid' => null,
          'state' => null,
          'city' => null,
@@ -136,15 +144,15 @@ class ZillowApi
       $options = array_merge($default_options, $options);
       
       // check requirements
-      if ((is_null($options['regionid'])) &&
-          (is_null($options['state']) && is_null($options['city'])) && 
-          (is_null($options['city']) && is_null($options['neighborhood'])) &&
-          (is_null($options['zip']))
+      if ((!is_null($options['regionid']))
+          || (!is_null($options['zip']))
+          || (is_null($options['state']) || is_null($options['city']))
+          || (is_null($options['city']) || is_null($options['neighborhood']))
       ) {
-         throw new Exception('You must provide a regionid, state/city, city/neighborhood or zip to getDemographics');
+         throw new InvalidArgumentException('You must provide a regionid, state/city, city/neighborhood or zip to getDemographics');
       }
       
-      return self::sendRequest('ZillowDemographics', 'GetDemographics', $options, $raw_xml);
+      return $this->sendRequest('ZillowDemographics', 'GetDemographics', $options, $raw_xml);
    }
    
    /**
@@ -153,7 +161,7 @@ class ZillowApi
     * Options available:
     *
     * <ul>
-    *   <li><b>zws-id</b> <i>(string)</i>: Zillow API key (default: self::$key)</li>
+    *   <li><b>zws-id</b> <i>(string)</i>: Zillow API key (default: $this->key)</li>
     *   <li><b>state</b> <i>(string)</i>: State (default: null)</li>
     *   <li><b>city</b> <i>(string)</i>: City (default: null)</li>
     *   <li><b>neighborhood</b> <i>(string)</i>: Neighborhood (default: null)</li>
@@ -168,10 +176,10 @@ class ZillowApi
     * @param boolean $rax_xml return the raw XML response
     * @return ZillowRegionChart chart data
     */
-   public static function getRegionChart($options = array(), $raw_xml = false)
+   public function getRegionChart($options = array(), $raw_xml = false)
    {
       $default_options = array(
-         'zws-id' => self::$key,
+         'zws-id' => $this->key,
          'state' => null,
          'city' => null,
          'neighborhood' => null,
@@ -183,7 +191,7 @@ class ZillowApi
       );
       $options = array_merge($default_options, $options);
       
-      return self::sendRequest('ZillowRegionChart', 'GetRegionChart', $options, $raw_xml);
+      return $this->sendRequest('ZillowRegionChart', 'GetRegionChart', $options, $raw_xml);
    }
    
    /**
@@ -192,7 +200,7 @@ class ZillowApi
     * Options available:
     *
     * <ul>
-    *   <li><b>zws-id</b> <i>(string)</i>: Zillow API key (default: self::$key)</li>
+    *   <li><b>zws-id</b> <i>(string)</i>: Zillow API key (default: $this->key)</li>
     *   <li><b>rid</b> <i>(integer)</i>: Zillow region ID (default: null)</li>
     *   <li><b>country</b> <i>(string)</i>: Country (default: null)</li>
     *   <li><b>state</b> <i>(string)</i>: State (default: null)</li>
@@ -205,10 +213,10 @@ class ZillowApi
     * @param boolean $rax_xml return the raw XML response
     * @return ZillowRegionChildren regions data
     */
-   public static function getRegionChildren($options = array(), $raw_xml = false)
+   public function getRegionChildren($options = array(), $raw_xml = false)
    {
       $default_options = array(
-         'zws-id' => self::$key,
+         'zws-id' => $this->key,
          'rid' => null,
          'country' => null,
          'state' => null,
@@ -219,11 +227,11 @@ class ZillowApi
       $options = array_merge($default_options, $options);
       
       // check requirements
-      if (is_null($options['rid']) && is_null($options['state']) && is_null($options['county'])) {
-         throw new Exception('You must provide a rid, state or country to getRegionChildren');
+      if (is_null($options['rid']) && is_null($options['state']) && is_null($options['country'])) {
+         throw new InvalidArgumentException('You must provide a rid, state or country to getRegionChildren');
       }
       
-      return self::sendRequest('ZillowRegionChildren', 'GetRegionChildren', $options, $raw_xml);
+      return $this->sendRequest('ZillowRegionChildren', 'GetRegionChildren', $options, $raw_xml);
    }
    
    /**
@@ -232,7 +240,7 @@ class ZillowApi
     * Options available:
     *
     * <ul>
-    *   <li><b>zws-id</b> <i>(string)</i>: Zillow API key (default: self::$key)</li>
+    *   <li><b>zws-id</b> <i>(string)</i>: Zillow API key (default: $this->key)</li>
     *   <li><b>state</b> <i>(string)</i>: State (default: null)</li>
     * </ul>
     * @see http://www.zillow.com/howto/api/GetRateSummary.htm
@@ -240,19 +248,15 @@ class ZillowApi
     * @param boolean $rax_xml return the raw XML response
     * @return ZillowRateSummary rate summary data
     */
-   public static function getRateSummary($options = array(), $raw_xml = false)
+   public function getRateSummary($options = array(), $raw_xml = false)
    {
       $default_options = array(
-         'zws-id' => self::$key,
+         'zws-id' => $this->key,
          'state' => null,
       );
       $options = array_merge($default_options, $options);
       
-      if (is_null($options['state'])) {
-         throw new Exception('You must provide a rid, state or country to getRegionChildren');
-      }
-      
-      return self::sendRequest('ZillowRateSummary', 'GetRateSummary', $options, $raw_xml);
+      return $this->sendRequest('ZillowRateSummary', 'GetRateSummary', $options, $raw_xml);
    }
    
    /**
@@ -261,7 +265,7 @@ class ZillowApi
     * Options available:
     *
     * <ul>
-    *   <li><b>zws-id</b> <i>(string)</i>: Zillow API key (default: self::$key)</li>
+    *   <li><b>zws-id</b> <i>(string)</i>: Zillow API key (default: $this->key)</li>
     *   <li><b>price</b> <i>(float)</i>: Property price (default: null)</li>
     *   <li><b>down</b> <i>(float)</i>: Percent down payment (default: null)</li>
     *   <li><b>dollarsdown</b> <i>(float)</i>: Dollars down payment (default: null)</li>
@@ -272,10 +276,10 @@ class ZillowApi
     * @param boolean $rax_xml return the raw XML response
     * @return ZillowMonthlyPayments payment data
     */
-   public static function getMonthlyPayments($options = array(), $raw_xml = false)
+   public function getMonthlyPayments($options = array(), $raw_xml = false)
    {
       $default_options = array(
-         'zws-id' => self::$key,
+         'zws-id' => $this->key,
          'price' => null,
          'down' => null,
          'dollarsdown' => null,
@@ -284,10 +288,10 @@ class ZillowApi
       $options = array_merge($default_options, $options);
       
       if (is_null($options['price'])) {
-         throw new Exception('You must provide a price to getMonthlyPayments');
+         throw new InvalidArgumentException('You must provide a price to getMonthlyPayments');
       }
       
-      return self::sendRequest('ZillowMonthlyPayments', 'GetMonthlyPayments', $options, $raw_xml);
+      return $this->sendRequest('ZillowMonthlyPayments', 'GetMonthlyPayments', $options, $raw_xml);
    }
    
    /**
@@ -295,12 +299,12 @@ class ZillowApi
     * @param array $option options
     * @return string url parameters
     */
-   protected static function optionsToParameters($options)
+   protected function optionsToParameters($options)
    {
       $rc = array();
       foreach ($options as $key => $value) {
          if (!is_null($value)) {
-            $rc[] = $key . '=' . urlencode($value);
+            $rc[] = trim($key) . '=' . urlencode(trim($value));
          }
       }
       
@@ -315,14 +319,14 @@ class ZillowApi
     * @param boolean $rax_xml return the raw XML response
     * @return mixed parsed return (type is $klass)
     */
-   protected static function sendRequest($klass, $method, $options = array(), $raw_xml = false)
+   protected function sendRequest($klass, $method, $options = array(), $raw_xml = false)
    {
       $rc = new $klass();
       try {
-         $xml = self::callWebService(self::$url . $method . '.htm?' . self::optionsToParameters($options));
+         $xml = $this->callWebService(self::$url . $method . '.htm?' . $this->optionsToParameters($options));
       } catch (Exception $e) {
-         $rc->error_code = $e->getCode();
-         $rc->error_message = $e->getMessage();
+         $rc->error_code = $e->getCode() != 0 ? $e->getCode() : 500;
+         $rc->error_message = $e->getMessage() != '' ? $e->getMessage() : 'General exception';
          return $raw_xml ? null : $rc;
       }
       
@@ -342,10 +346,10 @@ class ZillowApi
     * @throws Exception if cURL library is not installed
     * @throws Exception on cURL error
     */
-   protected static function callWebService($url)
+   protected function callWebService($url)
    {
       if (!function_exists('curl_init')) {
-         throw new Exception('The cURL library is not installed.');
+         throw new RuntimeException('The cURL library is not installed.');
       }
       
       $url_info = parse_url($url);
@@ -355,13 +359,13 @@ class ZillowApi
       curl_setopt($curl, CURLOPT_URL, $url);
       curl_setopt($curl, CURLOPT_HEADER, false);
       curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true);
-      curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, self::$request_timeout);
-      curl_setopt($curl, CURLOPT_TIMEOUT, self::$request_timeout);
+      curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, $this->request_timeout);
+      curl_setopt($curl, CURLOPT_TIMEOUT, $this->request_timeout);
       
       // check for proxy
-      if (!is_null(self::$proxy_address)) {
-         curl_setopt($curl, CURLOPT_PROXY, self::$proxy_address . ':' . self::$proxy_port);
-         curl_setopt($curl, CURLOPT_PROXYUSERPWD, self::$proxy_user . ':' . self::$proxy_pass);
+      if (!is_null($this->proxy_address)) {
+         curl_setopt($curl, CURLOPT_PROXY, $this->proxy_address . ':' . $this->proxy_port);
+         curl_setopt($curl, CURLOPT_PROXYUSERPWD, $this->proxy_user . ':' . $this->proxy_pass);
       }
 
       // check for http auth:
@@ -374,7 +378,7 @@ class ZillowApi
       
       $error = 'error';
       $retries = 0;
-      while (trim($error) != '' && $retries < self::$read_retries) {
+      while (trim($error) != '' && $retries < $this->read_retries) {
          $rc = curl_exec($curl);
          $error = curl_error($curl);
          $retries++;

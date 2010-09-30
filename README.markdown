@@ -24,4 +24,12 @@ A PHP 5 interface to the [Zillow API](http://www.zillow.com/howto/api/APIOvervie
 
 Soon.
 
+## Running the tests
+
+You'll need [PHPUnit 3.4+](http://www.phpunit.de/) installed to run the test suite.
+
+* Open `tests/phpunit.xml.dis`t and modify as needed.
+* Rename to `phpunit.xml`
+* Run `phpunit` from within `/tests` directory.
+
 Copyright (c) 2010 Matthew Vince, released under the MIT license
