@@ -144,10 +144,10 @@ class ZillowApi
       $options = array_merge($default_options, $options);
       
       // check requirements
-      if ((!is_null($options['regionid']))
-          || (!is_null($options['zip']))
-          || (is_null($options['state']) || is_null($options['city']))
-          || (is_null($options['city']) || is_null($options['neighborhood']))
+      if ((is_null($options['regionid']))
+          && (is_null($options['zip']))
+          && (is_null($options['state']) || is_null($options['city']))
+          && (is_null($options['city']) || is_null($options['neighborhood']))
       ) {
          throw new InvalidArgumentException('You must provide a regionid, state/city, city/neighborhood or zip to getDemographics');
       }
